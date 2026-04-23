@@ -16,7 +16,7 @@ export default function PurchasePlanning() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 6;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -28,9 +28,9 @@ export default function PurchasePlanning() {
       name: "",
       sku: "",
       category: "",
-      unit: "pcs",
-      quantity: 0,
-      unit_price: 0,
+      unit: "",
+      quantity: "",
+      unit_price: "",
     });
     setIsModalOpen(true);
   };
@@ -78,7 +78,7 @@ export default function PurchasePlanning() {
         name: "",
         sku: "",
         category: "",
-        unit: "pcs",
+        unit: "",
         quantity: 0,
         unit_price: 0,
       });
@@ -112,18 +112,18 @@ export default function PurchasePlanning() {
         </button>
       </div>
 
-      <div className="bg-white p-6 rounded-xl shadow">
+      <div className="bg-gray-300 p-6 rounded-xl shadow">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Products</h3>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-600" />
               <input
                 type="text"
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border rounded"
+                className="pl-10 pr-4 py-2 border rounded text-black placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
               />
             </div>
             <span className="text-sm text-gray-500">
@@ -157,7 +157,7 @@ export default function PurchasePlanning() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => openEditModal(product)}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-blue-600 pr-2 hover:text-blue-800"
                       >
                         <Edit size={16} />
                       </button>
@@ -181,32 +181,51 @@ export default function PurchasePlanning() {
             </tbody>
           </table>
         </div>
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4">
-            <button
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-4 py-2 border rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <span className="text-sm text-gray-500">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 border rounded disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        )}
-      </div>
+
+
+{totalPages > 1 && (
+<div className="flex items-center justify-between mt-4">
+            
+      <button
+        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+        disabled={currentPage === 1}
+        className="px-4 py-2 bg-gray-800 text-white rounded disabled:opacity-50"
+      >
+        Previous
+      </button>
+             {/* Page number boxes */}
+  <div className="flex gap-2">
+    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+      <button
+        key={page}
+        onClick={() => setCurrentPage(page)}
+        className={`w-8 h-8 rounded text-sm font-medium
+          ${currentPage === page
+            ? "bg-gray-800 text-white"
+            : "bg-white border text-gray-700 hover:bg-gray-100"
+          }`}
+      >
+        {page}
+      </button>
+    ))}
+  </div>
+
+  <button
+    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+    disabled={currentPage === totalPages}
+    className="px-4 py-2 bg-gray-800 text-white rounded disabled:opacity-50"
+  >
+    Next
+  </button>
+  </div>
+
+)}
+</div>
+
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-gray-300 p-6 rounded-xl shadow max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-4">
               {editingProduct ? "Edit Product" : "Add Product"}
             </h3>
@@ -215,36 +234,36 @@ export default function PurchasePlanning() {
                 value={form.name}
                 onChange={(event) => setForm({ ...form, name: event.target.value })}
                 placeholder="Product name"
-                className="w-full border p-2 rounded"
+                className="w-full border p-2 rounded placeholder-gray-700"
                 required
               />
               <input
                 value={form.sku}
                 onChange={(event) => setForm({ ...form, sku: event.target.value })}
                 placeholder="SKU"
-                className="w-full border p-2 rounded"
+                className="w-full border p-2 rounded placeholder-gray-700"
                 required
               />
               <input
                 value={form.category}
                 onChange={(event) => setForm({ ...form, category: event.target.value })}
                 placeholder="Category"
-                className="w-full border p-2 rounded"
+                className="w-full border p-2 rounded placeholder-gray-700"
               />
               <div className="grid grid-cols-2 gap-3">
                 <input
                   value={form.unit}
                   onChange={(event) => setForm({ ...form, unit: event.target.value })}
-                  placeholder="Unit"
-                  className="w-full border p-2 rounded"
+                  placeholder="Unit (e.g. pcs, kg)"
+                  className="w-full border p-2 rounded placeholder-gray-700"
                 />
                 <input
                   type="number"
                   min="0"
                   value={form.quantity}
                   onChange={(event) => setForm({ ...form, quantity: event.target.value })}
-                  placeholder="Quantity"
-                  className="w-full border p-2 rounded"
+                  placeholder="Quantity Number"
+                  className="w-full border p-2 rounded placeholder-gray-700"
                 />
               </div>
               <input
@@ -253,8 +272,8 @@ export default function PurchasePlanning() {
                 step="0.01"
                 value={form.unit_price}
                 onChange={(event) => setForm({ ...form, unit_price: event.target.value })}
-                placeholder="Unit price"
-                className="w-full border p-2 rounded"
+                placeholder="Unit price Number"
+                className="w-full border p-2 rounded placeholder-gray-700"
               />
               <div className="flex gap-2">
                 <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded flex-1">
