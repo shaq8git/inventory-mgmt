@@ -1,12 +1,13 @@
 import { Menu, User } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { logout } from "../services/auth";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -47,7 +48,7 @@ export default function Navbar() {
           <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
             <User size={16} />
           </div>
-          <span>Admin</span>
+          <span>{user?.full_name || user?.username || "User"}</span>
         </div>
 
         {open && (

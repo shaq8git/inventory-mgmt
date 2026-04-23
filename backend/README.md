@@ -12,21 +12,17 @@ pip install -r requirements.txt
 
 ### 2. Configure Database
 
-Update `DATABASE_URL` in `app/database.py`:
+Copy the sample env file and point it at PostgreSQL:
 
-```python
-DATABASE_URL = "postgresql://postgres:your_password@localhost/inventory_mgmt"
-```
-
-Or set environment variable:
 ```bash
-export DATABASE_URL="postgresql://postgres:password@localhost/inventory_mgmt"
+cp .env.example .env
+export DATABASE_URL="postgresql+psycopg2://inventory_app:inventory_app_password@localhost:5432/inventory_mgmt"
 ```
 
 ### 3. Create Database
 
 ```bash
-createdb inventory_mgmt
+psql -U postgres -f sql/init_postgresql.sql
 ```
 
 ### 4. Seed Test Data
@@ -89,6 +85,20 @@ password_hash (String)
 full_name (String)
 is_active (Boolean, default=True)
 is_admin (Boolean, default=False)
+created_at (DateTime, auto)
+```
+
+### products table
+```sql
+id (Integer, PK)
+name (String, Unique)
+sku (String, Unique)
+category (String)
+description (Text)
+unit (String)
+quantity (Integer)
+unit_price (Numeric(10,2))
+is_active (Boolean, default=True)
 created_at (DateTime, auto)
 ```
 
@@ -198,9 +208,26 @@ uvicorn app.main:app --reload
 # Check PostgreSQL is running
 sudo service postgresql status
 
-# Create database if missing
-createdb inventory_mgmt
+# Create database and role
+psql -U postgres -f sql/init_postgresql.sql
 ```
+
+### Password auth fails because of `md5` / `scram-sha-256`
+
+If PostgreSQL was initialized for `scram-sha-256` but `pg_hba.conf` still says `md5`, login can fail. Fix by updating the host lines in `pg_hba.conf` to `scram-sha-256`, then reload PostgreSQL:
+
+```conf
+host    all             all             127.0.0.1/32            scram-sha-256
+host    all             all             ::1/128                 scram-sha-256
+```
+
+Then run:
+
+```bash
+sudo systemctl reload postgresql
+```
+
+If you intentionally want `md5`, set `password_encryption = md5` in `postgresql.conf`, reset the user password, and reload the service.
 
 ### "CORS error from frontend"
 Check `app/main.py` CORS configuration includes your frontend URL.

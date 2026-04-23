@@ -34,22 +34,21 @@ pip install -r requirements.txt
 
 ### 2. Configure Database
 
-Update the DATABASE_URL in `app/database.py` or set environment variable:
+Use PostgreSQL and point the backend at it with an environment variable:
 
 ```bash
-# For local PostgreSQL
-export DATABASE_URL="postgresql://postgres:your_password@localhost/inventory_mgmt"
-
-# Or update app/database.py directly
+cd /home/Sumon/inventory-mgmt/backend
+cp .env.example .env
+export DATABASE_URL="postgresql+psycopg2://inventory_app:inventory_app_password@localhost:5432/inventory_mgmt"
 ```
 
 ### 3. Create Database and Seed Data
 
 ```bash
-# Create database (if not exists)
-createdb inventory_mgmt
+# Create role and database
+psql -U postgres -f sql/init_postgresql.sql
 
-# Seed test users
+# Seed test users and products
 python seed_data.py
 ```
 
@@ -119,7 +118,7 @@ npm run dev
 ### Step 1: Start Backend (Terminal 1)
 ```bash
 cd /home/Sumon/inventory-mgmt/backend
-export DATABASE_URL="postgresql://postgres:your_password@localhost/inventory_mgmt"
+export DATABASE_URL="postgresql+psycopg2://inventory_app:inventory_app_password@localhost:5432/inventory_mgmt"
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -210,10 +209,30 @@ inventory-mgmt/
 # Check PostgreSQL is running
 sudo service postgresql status
 
-# Create database
-createdb inventory_mgmt
+# Create database and role
+psql -U postgres -f sql/init_postgresql.sql
 
-# Update DATABASE_URL in app/database.py
+# Export DATABASE_URL from backend/.env.example
+```
+
+### pgAdmin does not show the `products` table
+1. Register the PostgreSQL server in pgAdmin with host `localhost`, port `5432`, maintenance DB `postgres`, and the same username/password used in `DATABASE_URL`.
+2. Expand:
+   `Servers -> your server -> Databases -> inventory_mgmt -> Schemas -> public -> Tables`
+3. Run `python seed_data.py` once, then refresh `Tables`. You should see both `products` and `users`.
+
+### Password authentication fails after the old `md5` workaround
+If the server was created with SCRAM passwords, `pg_hba.conf` must usually use `scram-sha-256` instead of `md5`:
+
+```conf
+host    all             all             127.0.0.1/32            scram-sha-256
+host    all             all             ::1/128                 scram-sha-256
+```
+
+Reload PostgreSQL after editing:
+
+```bash
+sudo systemctl reload postgresql
 ```
 
 ### "npm: command not found"

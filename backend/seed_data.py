@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, '/home/Sumon/inventory-mgmt/backend')
 
 from app.database import SessionLocal, engine, Base
-from app.models import User
+from app.models import Product, User
 import bcrypt
 
 
@@ -91,9 +91,54 @@ def seed_users():
         db.close()
 
 
+def seed_products():
+    """Create seed products for testing."""
+    db = SessionLocal()
+
+    try:
+        existing_product = db.query(Product).first()
+        if existing_product:
+            print("✓ Products already exist")
+            return
+
+        products = [
+            Product(
+                name="Cement Bag",
+                sku="CEM-001",
+                category="Construction",
+                description="50kg bag for site supply",
+                unit="bag",
+                quantity=250,
+                unit_price=540.00,
+                is_active=True,
+            ),
+            Product(
+                name="Steel Rod 12mm",
+                sku="STL-012",
+                category="Construction",
+                description="12mm reinforcement rod",
+                unit="piece",
+                quantity=120,
+                unit_price=890.00,
+                is_active=True,
+            ),
+        ]
+
+        db.add_all(products)
+        db.commit()
+        print("✓ Seed products created successfully")
+    except Exception as e:
+        db.rollback()
+        print(f"✗ Error creating seed products: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        db.close()
+
+
 if __name__ == "__main__":
     print("Starting database seeding...")
     create_tables()
     seed_users()
+    seed_products()
     print("\n✓ Seeding complete!")
-

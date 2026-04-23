@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Login() {
   const [form, setForm] = useState({
@@ -12,18 +13,16 @@ export default function Login() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const navigate = useNavigate();
+  const { login, loading } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const res = await api.post("/auth/login", form);
-
-      localStorage.setItem("token", res.data.access_token);
-
+      await login(form);
       navigate("/");
     } catch (err) {
-      alert("Login failed");
+      alert(err.response?.data?.detail || "Login failed");
     }
   };
 
@@ -88,8 +87,11 @@ export default function Login() {
                   />
 
                   <div className="mt-12">
-                    <button className="w-full rounded-lg bg-blue-600 px-4 py-2 text-white font-semibold transition hover:bg-blue-700 mb-2">
-                      Login
+                    <button
+                      className="w-full rounded-lg bg-blue-600 px-4 py-2 text-white font-semibold transition hover:bg-blue-700 mb-2 disabled:cursor-not-allowed disabled:bg-blue-400"
+                      disabled={loading}
+                    >
+                      {loading ? "Signing in..." : "Login"}
                     </button>
                     <button
                       type="button"
