@@ -34,19 +34,22 @@ pip install -r requirements.txt
 
 ### 2. Configure Database
 
-Use PostgreSQL and point the backend at it with an environment variable:
+Use PostgreSQL and point the Django backend at it with an environment variable:
 
 ```bash
 cd /home/Sumon/inventory-mgmt/backend
 cp .env.example .env
-export DATABASE_URL="postgresql+psycopg2://inventory_app:inventory_app_password@localhost:5432/inventory_mgmt"
+export DATABASE_URL="postgresql://inventory_app:inventory_app_password@localhost:5432/inventory_mgmt"
 ```
 
-### 3. Create Database and Seed Data
+### 3. Create Database, Run Migrations, and Seed Data
 
 ```bash
 # Create role and database
 psql -U postgres -f sql/init_postgresql.sql
+
+# Apply Django migrations
+python manage.py migrate
 
 # Seed test users and products
 python seed_data.py
@@ -74,11 +77,10 @@ Store Manager:
 
 ```bash
 cd /home/Sumon/inventory-mgmt/backend
-uvicorn app.main:app --reload --port 8000
+python manage.py runserver 8001
 ```
 
-✅ Backend running on: `http://localhost:8000`
-📚 API docs: `http://localhost:8000/docs`
+✅ Backend running on: `http://localhost:8001`
 
 ---
 
@@ -118,8 +120,9 @@ npm run dev
 ### Step 1: Start Backend (Terminal 1)
 ```bash
 cd /home/Sumon/inventory-mgmt/backend
-export DATABASE_URL="postgresql+psycopg2://inventory_app:inventory_app_password@localhost:5432/inventory_mgmt"
-uvicorn app.main:app --reload --port 8000
+export DATABASE_URL="postgresql://inventory_app:inventory_app_password@localhost:5432/inventory_mgmt"
+python manage.py migrate
+python manage.py runserver 8001
 ```
 
 ### Step 2: Start Frontend (Terminal 2)
@@ -150,21 +153,9 @@ npm run dev
 ```
 inventory-mgmt/
 ├── backend/
-│   ├── app/
-│   │   ├── core/
-│   │   │   ├── __init__.py
-│   │   │   └── security.py          # JWT, password hashing
-│   │   ├── models/
-│   │   │   └── __init__.py          # Database models
-│   │   ├── routes/
-│   │   │   ├── auth.py              # Login endpoint
-│   │   │   ├── products.py
-│   │   │   ├── transactions.py
-│   │   │   └── users.py
-│   │   ├── schemas/
-│   │   │   └── __init__.py          # Pydantic models
-│   │   ├── database.py              # SQLAlchemy setup
-│   │   └── main.py                  # FastAPI app
+│   ├── config/                      # Django settings and root URLs
+│   ├── inventory/                   # Models, serializers, views, urls
+│   ├── manage.py                    # Django management entry point
 │   ├── seed_data.py                 # Create test users
 │   └── requirements.txt             # Python dependencies
 │
@@ -191,12 +182,12 @@ inventory-mgmt/
 
 | File | Purpose |
 |------|---------|
-| `app/database.py` | SQLAlchemy setup, database connection |
-| `app/core/security.py` | Password hashing, JWT token creation |
-| `app/models/__init__.py` | User database model |
-| `app/schemas/__init__.py` | Pydantic request/response models |
-| `app/routes/auth.py` | Login endpoint |
-| `app/main.py` | FastAPI application initialization |
+| `config/settings.py` | Django settings, database, JWT and CORS config |
+| `inventory/models.py` | Django models for users and products |
+| `inventory/views.py` | API endpoints |
+| `inventory/serializers.py` | Request and response validation |
+| `inventory/urls.py` | App routes |
+| `manage.py` | Django management commands |
 | `seed_data.py` | Create test users in database |
 | `requirements.txt` | Python packages |
 
@@ -251,8 +242,8 @@ npm run dev
 ```
 
 ### "CORS error" when calling backend from frontend
-- Ensure backend is running on port 8000
-- Check CORS settings in `app/main.py` include your frontend URL
+- Ensure backend is running on port 8001
+- Check `CORS_ALLOWED_ORIGINS` in `backend/.env`
 
 ---
 
@@ -291,8 +282,9 @@ Response:
 
 - [ ] PostgreSQL installed and running
 - [ ] Backend dependencies installed (`pip install -r requirements.txt`)
+- [ ] Django migrations applied (`python manage.py migrate`)
 - [ ] Test users created (`python seed_data.py`)
-- [ ] Backend starts without errors (`uvicorn app.main:app --reload`)
+- [ ] Backend starts without errors (`python manage.py runserver 8001`)
 - [ ] Frontend dependencies installed (`npm install`)
 - [ ] Frontend starts without errors (`npm run dev`)
 - [ ] Can login at `http://localhost:3000`
